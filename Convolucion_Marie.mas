@@ -1,11 +1,12 @@
-﻿Init, HEX 9038		/Jump hacia el inicio de las instrucciones
-/ Punteros para leer la matriz de imagen
-startMatrix, hex 006   /Posicion de i:0 j;0 de la imagen
-nextMatrix, hex 000	   /Puntero para recorrer la matrix
+Init, HEX 9039		/Jump hacia el inicio de las instrucciones
+/ Punteros para leer la matriz de Imagen
+startMatrix, hex 007
+nextMatrix, hex 000
 i, dec 0
-j, dec 0				
+j, dec 0
 / Matriz n x m
-imageSize, dec 4		/Tamaño de la matrix Imagen
+imageSize, dec 4
+rowImage, dec 4
 /row: #0
 dec 1
 dec 2
@@ -26,15 +27,13 @@ dec 1
 dec 2
 dec 3
 dec 4
-
-
-/ Punteros para leer la matriz kernel
-startKernelMatrix, hex 01B  /Posicion i:0 j:0 del Kernel
-nextMatrizK, hex 000		/Puntero para recorrer el Kernel 
+/ Punteros para leer la matriz de Kernel
+startKernelMatrix, hex 01c
+nextMatrizK, hex 000
 ki, dec 0
 kj, dec 0
 / Matriz n x m
-kernelSize, dec 3			/Tamaño del Kernel
+kernelSize, dec 3
 /row: #0
 dec -5
 dec -6
@@ -47,10 +46,9 @@ dec -10
 dec -11
 dec -12
 dec -13
-
-/ Punteros para leer la matriz de resultado
-startMatrixR, hex 028		/Posición i:0 j:0 de la matrix de resultado
-nextMatrixR, hex 000		/Puntero para recorrer la matrix de resultado
+/ Punteros para leer la matriz de Resultado
+startMatrixR, hex 029
+nextMatrixR, hex 000
 ri, dec 0
 rj, dec 0
 /row: #0
@@ -86,7 +84,7 @@ for1,			Load Zero
 				Jump for2
 for2,			Load Zero		
 				Store ki		/ki=0 antes de entrar a for3
-				Load imageSize
+				Load rowImage
 				Subt j
         		Skipcond 800	/segundo for, inicia j en 0 y verifica que j sea menor que imageSize
                 Jump back_for1	/regresa a for 1
@@ -150,7 +148,7 @@ secondpart_and, Load nj
 				Skipcond 800  /verifico si nj es positivo, si no es regreso a for4
                 Jump exit_for4
 last_and,       Load nj		
-                Subt imageSize
+                Subt rowImage
                 Skipcond 000   /verifico si nj es menor a imageSize, si no es regreso a for4
                 Jump exit_for4
                 
@@ -176,7 +174,7 @@ car_filaK,		Load kernelSize
 /Repite el mismo proceso para la matrix imagen
 
                 
-car_filaI,		Load imageSize
+car_filaI,		Load rowImage
 				Store Y
                 Load ni
                 Store X
@@ -351,7 +349,7 @@ Final, Load Zero
 	   Store help
        Load Zero
 	   Store ctr
-       Load imageSize
+       Load rowImage
 	   Store divisor
        Jns Modulo
 	   Skipcond 400
@@ -397,7 +395,7 @@ FinalMod,			   Load ctr
                        Add One
                        Store divisor
                        Load help
-					   Subt imageSize
+					   Subt rowImage
                        JumpI Modulo
 sec_final,			   Load help
 					   Load divisor
