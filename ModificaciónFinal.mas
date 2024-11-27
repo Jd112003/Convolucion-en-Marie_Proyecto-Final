@@ -1,0 +1,498 @@
+Init, HEX 9049		/Jump hacia el inicio de las instrucciones
+/ Punteros para leer la matriz de Imagen
+startMatrix, hex 007
+nextMatrix, hex 000
+i, dec 0
+j, dec 0
+/ Matriz n x m
+imageSize, dec 4
+rowImage, dec 4
+/row: #0
+dec 1
+dec 2
+dec 3
+dec 4
+/row: #1
+dec 2
+dec 4
+dec 6
+dec 8
+/row: #2
+dec 10
+dec 12
+dec 13
+dec 14
+/row: #3
+dec 11
+dec 12
+dec 8
+dec 40
+/ Punteros para leer la matriz de Kernel
+startKernelMatrix, hex 01c
+nextMatrizK, hex 000
+ki, dec 0
+kj, dec 0
+/ Matriz n x m
+kernelSize, dec 5
+/row: #0
+dec 1
+dec 1
+dec 1
+dec 1
+dec 1
+/row: #1
+dec 1
+dec 1
+dec 1
+dec 1
+dec 1
+/row: #2
+dec 1
+dec 1
+dec 1
+dec 1
+dec 1
+/row: #3
+dec 1
+dec 1
+dec 1
+dec 1
+dec 1
+/row: #4
+dec 1
+dec 1
+dec 1
+dec 1
+dec 1
+/ Punteros para leer la matriz de Resultado
+startMatrixR, hex 039
+nextMatrixR, hex 000
+ri, dec 0
+rj, dec 0
+/row: #0
+dec 0
+dec 0
+dec 0
+dec 0
+/row: #1
+dec 0
+dec 0
+dec 0
+dec 0
+/row: #2
+dec 0
+dec 0
+dec 0
+dec 0
+/row: #3
+dec 0
+dec 0
+dec 0
+dec 0
+
+Load startMatrixR  
+Store nextMatrixR    /iniciamos el puntero de resultado con la posición de i:0 j:0 de resultado
+
+for1,			Load Zero
+				Store j
+				Load imageSize
+				Subt i
+				Skipcond 800    /primer for, inicio i en 0 y verifica que i sea menor que imageSizeeize
+                Jump finish		/salta a la impresion
+				Jump for2
+for2,			Load Zero		
+				Store ki		/ki=0 antes de entrar a for3
+				Load rowImage
+				Subt j
+        		Skipcond 800	/segundo for, inicia j en 0 y verifica que j sea menor que imageSize
+                Jump back_for1	/regresa a for 1
+        		Jump for2_first 
+back_for1,	    Load i
+                Add One
+                Store i
+        		Jump for1	/suma 1 a i antes de regresar a ejecutar for1
+for2_first,		Load Zero
+				Store Sum
+                Jump for3	/hace sum = 0
+for3,			Load Zero  /ki=0 antes de entrar a for4
+				Store kj
+				Load kernelSize
+				Subt ki
+                Skipcond 800    /verifica que ki sea menor que kernelSize
+                Jump back_for2
+                Jump for4
+back_for2,      Load j
+                Add One		/suma 1 a j antes de regresar a ejecutar for2
+                Store j
+                Load Sum			/cuando voy a salir al for2, cargo sum
+                StoreI nextMatrixR  /almacena el valor de sum en la posicion actual de la matrix resultado
+				Load nextMatrixR	
+				Add One
+				Store nextMatrixR	/me muevo a la siguiente posicion de la matrix resultado
+                Jump for2			/regreso al for2
+for4,			Load kernelSize		
+				Subt kj
+                Skipcond 800		/compruebo que kj sea menor que kernelSize
+                Jump back_for3
+                Jump for4_continue
+back_for3,      Load ki
+                Add One
+				Store ki
+                Jump for3		/sumo 1 a ki antes de regresar a for3
+for4_continue,	Load i
+				Add ki
+                Subt padding_k
+				Store ni		/calculo el valor ni para posicionarme en la matrix imagen
+                Load j
+                Add kj
+				Subt padding_k
+                Store nj		/calculo el valor nj para posicionarme en la matriz imagen
+                Load ni
+                Skipcond 800	/verifico que ni sea positivo, si no es positivo salto a first_and
+                Jump first_and
+                Jump ce_ft_cn
+first_and,		Load ni
+				Skipcond 400 /verifico que ni sea 0, si no es ninguno regreso a for4
+                Jump continueFirstAnd
+                Jump ce_ft_cn
+continueFirstAnd, Load Zero
+				Subt ni	
+                Subt one
+                Store ni
+                Jump ce_ft_cn
+ce_ft_cn,       Load ni			
+                Subt imageSize	
+                Skipcond 000	/verifico que ni sea menor que imageSize, si no es regreso a for4
+                Jump modNi
+VerNj,          Load nj
+                Skipcond 400   /verifico que nj es igual a 0, sino voy a verificar si es positivo
+                Jump secondpart_and
+                Jump last_and
+modNi, Load dos
+		Store Y
+        Load imageSize
+		Store X
+        Load Zero
+        Store result
+		JnS FMult
+		Subt ni
+        Subt one
+        Store ni
+        Jump VerNj
+        
+      
+secondpart_and, Load nj		
+				Skipcond 800  /verifico si nj es positivo, si no es regreso a for4
+                Jump ModNj
+                Jump last_and
+
+ModNj, Load nj
+		Subt nj
+        Subt nj
+        Subt one
+        Store nj
+        Jump last_and
+
+ModNjFinal, 	Load dos
+				Store X
+                Load rowImage
+				Store Y
+                Load Zero
+				Store result
+				JnS FMult
+				Subt nj
+                Subt one
+                Store nj
+				Jump car_filaK
+
+                
+last_and,       Load nj		
+                Subt rowImage
+                Skipcond 000   /verifico si nj es menor a imageSize, si no es regreso a for4
+                Jump ModNjFinal
+
+                
+
+/Aqui se hace el ajuste para acomodar el i de la matriz del kernel
+/Se carga el tamaño del kernel y ki, se establece result en 0 y se 
+/ejecuta la multiplicación, esto funciona para acomodar la fila del kernel
+/porque si ki es 0 se quedara en la primera fila, si es uno añadira el tamaño del kernel
+/, la posición inicio de la matrix kernel y la posición del elemento en j, 
+/esto me permitira saltar a la linea 1 y asi con cada fila.
+car_filaK,		Load kernelSize
+				Store Y
+                Load ki
+                Store X
+                Load Zero
+				Store result
+                JnS FMult
+                Add startKernelMatrix
+				Add kj
+				Store nextMatrizK
+                Jump car_filaI
+                
+/Repite el mismo proceso para la matrix imagen
+
+                
+car_filaI,		Load rowImage
+				Store Y
+                Load ni
+                Store X
+                Load Zero
+				Store result
+                JnS FMult
+				Add startMatrix
+				Add nj
+				Store nextMatrix
+                Jump MultandSum
+                
+/Carga el elemento de la matrix imagen y del kernel y los multiplica, de ahi se suma
+/y se almacena en Sum
+                
+MultandSum,     LoadI nextMatrix
+                Store Y
+          		LoadI nextMatrizK
+          		Store X
+                Load Zero
+				Store result
+				JnS FMult
+				Add Sum
+				Store Sum
+				Jump exit_for4
+				                
+exit_for4,      Load kj
+                Add One
+				Store kj
+                Jump for4    /se suma 1 a kj y se regresa a for4
+				                
+
+                
+
+finish, JnS PrintFunc
+		Halt
+
+
+/ check if Y is negative, if -ve negate Y and set negative flag
+FMult, Load Y
+Skipcond 000
+Jump nonneg
+
+Subt Y
+Subt Y
+Store Y
+Clear
+Add one
+Store negflag
+Clear
+Jump loop
+
+nonneg,  Clear
+         Store negflag
+         / check if Y is zero, if it is, then we jump to halt
+         Load Y
+         Skipcond 400
+         Jump loop / false
+         Jump halt / true
+
+/ Loop for performing iterative addition
+loop,    Load result
+         Add X
+         Store result
+
+         Load Y
+         Subt one
+         Store Y
+	
+         Skipcond 400 / have we completed the multiplication?
+         Jump loop / no; repeat loop
+         / yes, so exit the loop
+
+/ check for negative flag, if it is set, negate the result
+Load negflag
+Skipcond 800
+Jump halt
+
+/ negate result
+Load result
+Subt result
+Subt result
+Store result
+/ run the next three instructions, which halts the program
+
+/ Output result to user then halt program
+halt,    Load result
+         JumpI FMult
+         
+PrintFunc, Hex 000
+PrintFunc2, Load nextMatrixR
+			Subt startMatrixR
+            Skipcond 400
+            Jump PrintFunc3
+            JumpI PrintFunc
+           
+PrintFunc3,LoadI startMatrixR
+		   STORE n
+           STORE OG
+		   Skipcond 800
+		   JnS toPos
+Print, Load n
+	   Skipcond 400
+	   Jump MOD
+       Load Index
+       Add One
+       Store Index
+       Load isPositive
+       Skipcond 800
+	   Jump Impresion
+       Load negativeAscii
+       Output
+       Jump Impresion
+       
+       
+Impresion, LoadI Index
+           Output
+           Load Start
+		   Subt Index
+           Skipcond 800
+           Jump Final
+           Load Index
+           Add One
+           Store Index
+           Jump Impresion
+
+MOD, Load n
+If1, Subt DIV
+    Skipcond 000
+    Jump Else1
+Then1, Jump Endif1
+Else1, Store n
+    Load ModCounter
+    Add One
+    Store ModCounter
+    Jump MOD
+Endif1, Load n
+Add ASCII
+StoreI Index
+Load Index
+Subt One
+Store Index
+Load Zero
+Store ModCounter
+Jump Division
+
+Division, Load OG
+If, Subt DIV
+    Skipcond 000
+    Jump Else
+Then, Jump Endif
+Else, Store OG
+    Load DIVCOUNTER
+    Add One
+    Store DIVCOUNTER
+    Jump Division
+Endif, Load DIVCOUNTER
+	   Store OG
+       Store n
+       Load Zero
+       Store DIVCOUNTER
+       Jump Print
+Final, Load Zero
+	   Store isPositive
+       Load Start
+       Store Index
+       Load SpaceAscii
+       Output 
+       Load counter_saltoln
+	   Add One
+	   Store counter_saltoln
+	   Load counter_saltoln
+	   Store help
+       Load Zero
+	   Store ctr
+       Load rowImage
+	   Store divisor
+       Jns Modulo
+	   Skipcond 400
+       jump final_cont
+       Load lineJumpAscii
+	   Output
+       Load Zero
+	   Store counter_saltoln
+final_cont,       Load startMatrixR
+       			  Add One
+       			  Store startMatrixR
+       			  Jump PrintFunc2
+
+toPos, HEX 000
+	   Load One
+	   Store isPositive
+	   Load n
+       SUBT n
+       SUBT n
+       Store n
+       Store OG
+       JumpI toPos
+       
+       
+Modulo, 			   Load help
+					   Load help
+					   Subt divisor
+            		   Skipcond 400
+            		   Jump Sec_ver
+                       Jump FinalMod
+Sec_ver,			   Skipcond 800	
+					   jump sec_final
+                       Jump Continue
+Continue,              Load help
+            		   Subt divisor
+            		   Store help
+            		   Jump Modulo
+                  
+FinalMod,			   Load ctr
+					   Add One
+                       Store ctr
+                       Load divisor
+                       Add One
+                       Store divisor
+                       Load help
+					   Subt rowImage
+                       JumpI Modulo
+sec_final,			   Load help
+					   Load divisor
+                       Add One
+                       Store divisor
+                       JumpI Modulo
+
+dos, DEC 2
+X, DEC 0
+Y, DEC 0
+one, DEC 1
+negflag, DEC 0
+result, DEC 0
+Sum, dec 0
+Zero, dec 0
+One, dec 1
+ni, dec 0
+nj, dec 0
+padding_k, dec 2
+/ASCII
+Index, HEX C0F
+Start, HEX C0F
+
+/Variables
+ModCounter, DEC 0
+n, DEC 0
+OG, DEC 0
+last, DEC 0
+DIV, DEC 10
+DIVCOUNTER, DEC 0
+COUNTER, DEC 1
+ASCII, DEC 48
+isPositive, DEC 0
+negativeAscii, DEC 45
+lineJumpAscii, DEC 10
+SpaceAscii, Dec 32
+counter_saltoln, dec 0
+help, dec 0
+divisor, dec 0
+ctr, dec 0
